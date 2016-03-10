@@ -1,17 +1,3 @@
-//
-// Usage:
-//     export SECRET=YOUR_GITHUB_WEBHOOK_SECRET
-//     export CWD=/path/to/your/project
-//     export REMOTE=origin
-//     export SOCKET_PRIV="your_user your_group"
-//     export SOCKET_NAME="optional_socket_name"
-//     export GIT_AUTHOR="Tim Branyen"
-//     export GIT_EMAIL="tim@tabdeveloper.com"
-//
-// # As root:
-//     node auto-deploy
-//
-
 [
   'SECRET',
   'CWD',
@@ -47,24 +33,24 @@ GHWebHook.on('push', function (event) {
     console.log('Fetching remote', process.env.REMOTE);
 
     return repo.getRemote(process.env.REMOTE).then(function(remote) {
-			var fetchOpts = {
-				callbacks: {
-					credentials: function(url, userName) {
-						return Git.Cred.sshKeyFromAgent(userName);
-					}
-				}
-			};
+      var fetchOpts = {
+        callbacks: {
+          credentials: function(url, userName) {
+            return Git.Cred.sshKeyFromAgent(userName);
+          }
+        }
+      };
 
       return remote.fetch([payload.ref], fetchOpts, 'Fetched latest deployment');
     }).then(function() {
-      return repo; 
+      return repo;
     });
   }
 
   Promise.resolve(process.env.CWD)
     .then(function(path) {
       console.log('Opened repository');
-      return Git.Repository.open(path); 
+      return Git.Repository.open(path);
     })
     .then(fetchRemote)
     .then(function(repo) {
