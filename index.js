@@ -78,7 +78,7 @@ GHWebHook.on('push', function (event) {
 
       exec('npm install --python=python2 && npm update && npm prune', {
         cwd: process.env.CWD,
-        uid: process.env.NODE_UID,
+        uid: Number(process.env.NODE_UID),
       });
 
       console.log('Reloading application');
@@ -87,7 +87,7 @@ GHWebHook.on('push', function (event) {
         // TODO Extract uid into env var
         exec('npm run reload', {
           cwd: process.env.CWD,
-          uid: process.env.NODE_UID
+          uid: Number(process.env.NODE_UID)
         });
       }
       catch (unhandledException) {}
