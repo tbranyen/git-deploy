@@ -1,12 +1,15 @@
 {
-  "name": "git-deploy",
+  "name": "nodegit-deployer",
   "version": "1.0.0",
   "description": "Another Git based deployment tool for your Node apps",
   "main": "index.js",
+  "bin": "index.js",
+  "repository": "https://github.com/tbranyen/git-deploy",
   "dependencies": {
     "express": "^4.12.3",
     "github-webhook-handler": "^0.4.0",
-    "nodegit": "^0.11.6"
+    "nodegit": "^0.11.6",
+    "primer-css": "^2.7.0"
   },
   "author": "Tim Branyen (@tbranyen)",
   "license": "MIT"

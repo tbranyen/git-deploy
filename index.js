@@ -24,8 +24,9 @@ var socketName = process.env.SOCKET_NAME || 'socket';
 
 GHWebHook.on('push', function (event) {
   var payload = event.payload;
+  var branch = payload.ref.slice('refs/heads/'.length);
 
-  if (payload.ref !== 'refs/heads/master') {
+  if (branch !== 'development' || branch !== 'production') {
     return;
   }
 
@@ -47,12 +48,17 @@ GHWebHook.on('push', function (event) {
     });
   }
 
+  function changeRemote(repo) {
+    return repo.checkoutBranch(branch);
+  }
+
   Promise.resolve(process.env.CWD)
     .then(function(path) {
       console.log('Opened repository');
       return Git.Repository.open(path);
     })
     .then(fetchRemote)
+    .then(changeBranch)
     .then(function(repo) {
       return repo.getReference(process.env.REMOTE).then(function(ref) {
         console.log('Changing HEAD to', ref.target());
@@ -70,7 +76,6 @@ GHWebHook.on('push', function (event) {
       console.log('Ensure Node modules are up-to-date');
       exec('npm install --python=python2 && npm update && npm prune', { cwd: process.env.CWD, uid: 1000 });
 
-      process.setuid(0);
       console.log('Reloading application');
 
       try {
@@ -78,6 +83,7 @@ GHWebHook.on('push', function (event) {
       }
       catch (unhandledException) {}
 
+      process.setuid(0);
       console.log('Resetting NGINX');
       exec('nginx -s reload');
 
