@@ -25,7 +25,9 @@ var socketName = process.env.SOCKET_NAME || './socket';
 GHWebHook.on('push', function (event) {
   var payload = event.payload;
   var branch = payload.ref.slice('refs/heads/'.length);
+  var headCommit = payload.head_commit.id;
 
+  // Currently only support two environments.
   if (branch !== 'development' && branch !== 'production') {
     return;
   }
@@ -48,7 +50,7 @@ GHWebHook.on('push', function (event) {
     });
   }
 
-  function changeBranch(repo) {
+  function checkoutCommit(repo) {
     return repo.checkoutBranch(branch).then(function() {
       return repo;
     });
@@ -60,32 +62,32 @@ GHWebHook.on('push', function (event) {
       return Git.Repository.open(path);
     })
     .then(fetchRemote)
-    .then(changeBranch)
     .then(function(repo) {
-      return repo.getReference(process.env.REMOTE).then(function(ref) {
-        console.log('Changing HEAD to', ref.target());
+      repo.setHeadDetached(headCommit);
+      return repo;
+    }).then(function(repo) {
+      console.log('Checking out HEAD');
 
-        return repo.setHead(ref.name());
-      }).then(function() {
-        console.log('Checking out HEAD');
-
-        return Git.Checkout.head(repo, {
-          checkoutStrategy: Git.Checkout.STRATEGY.FORCE
-        });
+      return Git.Checkout.head(repo, {
+        checkoutStrategy: Git.Checkout.STRATEGY.FORCE
       });
     })
     .then(function() {
       console.log('Ensure Node modules are up-to-date');
-      exec('npm install --python=python2 && npm update && npm prune', { cwd: process.env.CWD, uid: 1000 });
+
+      exec('npm install --python=python2 && npm update && npm prune', {
+        cwd: process.env.CWD,
+        uid: 1000,
+      });
 
       console.log('Reloading application');
 
       try {
-        exec('npm run reload', { cwd: process.env.CWD });
+        // TODO Extract uid into env var
+        exec('npm run reload', { cwd: process.env.CWD, uid: 1000 });
       }
       catch (unhandledException) {}
 
-      process.setuid(0);
       console.log('Resetting NGINX');
       exec('nginx -s reload');
 
