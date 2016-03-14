@@ -2,6 +2,7 @@
   'SECRET',
   'CWD',
   'REMOTE',
+  'NODE_UID',
   'SOCKET_PRIV',
   'GIT_AUTHOR',
   'GIT_EMAIL'
@@ -77,14 +78,17 @@ GHWebHook.on('push', function (event) {
 
       exec('npm install --python=python2 && npm update && npm prune', {
         cwd: process.env.CWD,
-        uid: 1000,
+        uid: process.env.NODE_UID,
       });
 
       console.log('Reloading application');
 
       try {
         // TODO Extract uid into env var
-        exec('npm run reload', { cwd: process.env.CWD, uid: 1000 });
+        exec('npm run reload', {
+          cwd: process.env.CWD,
+          uid: process.env.NODE_UID
+        });
       }
       catch (unhandledException) {}
 
