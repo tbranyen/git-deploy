@@ -33,6 +33,12 @@ GHWebHook.on('push', function (event) {
     return;
   }
 
+  function openRepository(path) {
+    console.log('Opened repository');
+
+    return Git.Repository.open(path);
+  }
+
   function fetchRemote(repo) {
     console.log('Fetching remote', process.env.REMOTE);
 
@@ -52,51 +58,51 @@ GHWebHook.on('push', function (event) {
   }
 
   function checkoutCommit(repo) {
-    return repo.checkoutBranch(branch).then(function() {
-      return repo;
+    console.log('Checking out commit %s', headCommit);
+
+    repo.setHeadDetached(headCommit);
+    return repo;
+  }
+
+  function resetHead(repo) {
+    console.log('Resetting HEAD');
+
+    return Git.Checkout.head(repo, {
+      checkoutStrategy: Git.Checkout.STRATEGY.FORCE
     });
   }
 
-  Promise.resolve(process.env.CWD)
-    .then(function(path) {
-      console.log('Opened repository');
-      return Git.Repository.open(path);
-    })
-    .then(fetchRemote)
-    .then(function(repo) {
-      repo.setHeadDetached(headCommit);
-      return repo;
-    }).then(function(repo) {
-      console.log('Checking out HEAD');
+  function installAndReload() {
+    console.log('Ensure Node modules are up-to-date');
 
-      return Git.Checkout.head(repo, {
-        checkoutStrategy: Git.Checkout.STRATEGY.FORCE
-      });
-    })
-    .then(function() {
-      console.log('Ensure Node modules are up-to-date');
+    exec('npm install --python=python2 && npm update && npm prune', {
+      cwd: process.env.CWD,
+      uid: Number(process.env.NODE_UID),
+    });
 
-      exec('npm install --python=python2 && npm update && npm prune', {
+    console.log('Reloading application');
+
+    try {
+      // TODO Extract uid into env var
+      exec('npm run reload', {
         cwd: process.env.CWD,
-        uid: Number(process.env.NODE_UID),
+        uid: Number(process.env.NODE_UID)
       });
+    }
+    catch (unhandledException) {}
 
-      console.log('Reloading application');
+    console.log('Resetting NGINX');
+    exec('nginx -s reload');
 
-      try {
-        // TODO Extract uid into env var
-        exec('npm run reload', {
-          cwd: process.env.CWD,
-          uid: Number(process.env.NODE_UID)
-        });
-      }
-      catch (unhandledException) {}
+    console.log('Completed deployment');
+  }
 
-      console.log('Resetting NGINX');
-      exec('nginx -s reload');
-
-      console.log('Completed deployment');
-    })
+  Promise.resolve(process.env.CWD)
+    .then(openRepository)
+    .then(fetchRemote)
+    .then(checkoutCommit)
+    .then(resetHead)
+    .then(installAndReload)
     .catch(function(ex) {
       console.log(ex.stack);
     });
