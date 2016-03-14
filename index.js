@@ -20,13 +20,13 @@ var createHandler = require('github-webhook-handler');
 
 var GHWebHook = createHandler({ path: '/', secret: process.env.SECRET });
 var me = Git.Signature.now(process.env.GIT_AUTHOR, process.env.GIT_EMAIL);
-var socketName = process.env.SOCKET_NAME || 'socket';
+var socketName = process.env.SOCKET_NAME || './socket';
 
 GHWebHook.on('push', function (event) {
   var payload = event.payload;
   var branch = payload.ref.slice('refs/heads/'.length);
 
-  if (branch !== 'development' || branch !== 'production') {
+  if (branch !== 'development' && branch !== 'production') {
     return;
   }
 
@@ -48,7 +48,7 @@ GHWebHook.on('push', function (event) {
     });
   }
 
-  function changeRemote(repo) {
+  function changeBranch(repo) {
     return repo.checkoutBranch(branch).then(function() {
       return repo;
     });
@@ -96,7 +96,7 @@ GHWebHook.on('push', function (event) {
     });
 });
 
-var socketPath = './' + socketName;
+var socketPath = socketName;
 
 try { exec('rm ' + socketPath); } catch (ex) {}
 express().use(GHWebHook).listen(socketPath);
