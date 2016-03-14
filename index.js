@@ -49,7 +49,9 @@ GHWebHook.on('push', function (event) {
   }
 
   function changeRemote(repo) {
-    return repo.checkoutBranch(branch);
+    return repo.checkoutBranch(branch).then(function() {
+      return repo;
+    });
   }
 
   Promise.resolve(process.env.CWD)
