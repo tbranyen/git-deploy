@@ -6,11 +6,17 @@
   "bin": "index.js",
   "repository": "https://github.com/tbranyen/git-deploy",
   "dependencies": {
+    "chalk": "^1.1.1",
     "express": "^4.12.3",
     "github-webhook-handler": "^0.4.0",
-    "nodegit": "^0.11.6",
     "primer-css": "^2.7.0"
   },
+  "peerDependencies": {
+    "nodegit": "*"
+  },
   "author": "Tim Branyen (@tbranyen)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  }
 }

@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+
 [
   'SECRET',
   'CWD',
@@ -8,8 +10,8 @@
   'GIT_EMAIL'
 ].forEach(function(ENV) {
   if (!(ENV in process.env)) {
-    console.error('Missing environment variable: ' + ENV);
-    process.exit();
+    console.error(chalk.red('Missing environment variable: ') + ENV);
+    process.exit(1);
   }
 });
 
